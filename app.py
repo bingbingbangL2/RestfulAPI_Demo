@@ -4,15 +4,15 @@ Created on Nov 28, 2016
 @author: bing.xia
 """
 
-from flask import Flask, jsonify,abort,request
-
+from flask import Flask, jsonify,abort,request, make_response
+from flask_httpauth import HTTPBasicAuth 
+from functools import wraps
 app = Flask(__name__)
 
 
 @app.route("/")
 def index():
-    return "Hello word"
-
+    return "Hello world"
 
 apis=[
        {
@@ -53,18 +53,50 @@ books = [
           },
          ]
 
+accounts = {
+           "user1":"password1",
+           "user2":"password2",
+           "user3":"password3",
+           "user4":"password4",
+           }
+
+auth = HTTPBasicAuth()
 
 
+def check_auth(username, password):
+    """This function is called to check if a username /
+    password combination is valid.
+    """
+    if username in accounts.keys() and password == accounts[username]: 
+        return True
+    return False
+
+
+def requires_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if not auth or not check_auth(auth.username, auth.password):
+            return unauthorized()
+        return f(*args, **kwargs)
+    return decorated
+    
+
+def unauthorized():
+    return make_response(jsonify({'error': 'Unauthorized access'}), 401)
 
 @app.route("/api/v1/allapis", methods=["GET"])
+@requires_auth
 def get_allapis():
     return jsonify({"apis": apis});
 
 @app.route("/api/v1/books", methods=["GET"])
+@requires_auth
 def get_allbooks():
     return jsonify({"books": books});
 
 @app.route("/api/v1/books/<int:book_id>", methods=["GET"])
+@requires_auth
 def get_bookbyid(book_id):
     book = filter(lambda t: t["id"] == book_id, books)
     if len(book) == 0:
@@ -72,6 +104,7 @@ def get_bookbyid(book_id):
     return jsonify({"book": book[0]});
 
 @app.route("/api/v1/books/<int:book_id>", methods=["DELETE"])
+@requires_auth
 def delete_book(book_id):
     book = filter(lambda t: t["id"] == book_id, books)
     if len(book) == 0:
@@ -80,18 +113,19 @@ def delete_book(book_id):
     return jsonify({"result": "success"})
 
 @app.route("/api/v1/books/<int:book_id>", methods=["PUT"])
+@requires_auth
 def update_book(book_id):
     book = filter(lambda t: t["id"] == book_id, books)
     if len(book) == 0:
         abort(404)
     if not request.json:
-        abort(400)
+        return make_response(jsonify({'error': 'Please send with your payload'}), 400)
     if 'name' in request.json and type(request.json['name']) != unicode:
-        abort(400)
+        return make_response(jsonify({'error': 'Type of name is not str'}), 400)
     if 'price' in request.json and type(request.json['price']) is not int:
-        abort(400)
+        return make_response(jsonify({'error': 'Type of price is not int'}), 400)
     if 'publisher' in request.json and type(request.json['publisher']) is not unicode:
-        abort(400)
+        return make_response(jsonify({'error': 'Type of publisher is not str'}), 400)
     
     book[0]['name'] = request.json.get('name', book[0]['name'])
     book[0]['price'] = request.json.get('price', book[0]['price'])
@@ -99,14 +133,25 @@ def update_book(book_id):
     return jsonify({"book": book[0]})
     
 @app.route("/api/v1/books", methods=["POST"])
-def create_task():
+@requires_auth
+def create_book():
     if not request.json or not "name" in request.json:
-        abort(400)
+        return make_response(jsonify({'error': 'Please send with your payload, or missed field name'}), 400)
+    _publisher = "no publisher"
+    _price=0
+    if 'price' in request.json and type(request.json['price']) is not int:
+        return make_response(jsonify({'error': 'Type of price is not int'}), 400)
+    else:
+        _price = request.json["price"]
+    if 'publisher' in request.json and type(request.json['publisher']) is not unicode:
+        return make_response(jsonify({'error': 'Type of publisher is not str'}), 400)
+    else:
+        _publisher = request.json["publisher"]
     book = {
         "id": books[-1]["id"] + 1,
         "name": request.json["name"],
-        "price": request.json["price"],
-        "publisher": request.json["publisher"]
+        "price": _price,
+        "publisher": _publisher
     }
     books.append(book)
     return jsonify({"book": book}), 201
