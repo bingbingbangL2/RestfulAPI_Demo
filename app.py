@@ -139,14 +139,16 @@ def create_book():
         return make_response(jsonify({'error': 'Please send with your payload, or missed field name'}), 400)
     _publisher = "no publisher"
     _price=0
-    if 'price' in request.json and type(request.json['price']) is not int:
-        return make_response(jsonify({'error': 'Type of price is not int'}), 400)
-    else:
-        _price = request.json["price"]
-    if 'publisher' in request.json and type(request.json['publisher']) is not unicode:
-        return make_response(jsonify({'error': 'Type of publisher is not str'}), 400)
-    else:
-        _publisher = request.json["publisher"]
+    if 'price' in request.json:
+        if type(request.json['price']) is not int:
+            return make_response(jsonify({'error': 'Type of price is not int'}), 400)
+        else:
+            _price = request.json["price"]
+    if 'publisher' in request.json:
+        if type(request.json['publisher']) is not unicode:
+            return make_response(jsonify({'error': 'Type of publisher is not str'}), 400)
+        else:
+            _publisher = request.json["publisher"]
     book = {
         "id": books[-1]["id"] + 1,
         "name": request.json["name"],
