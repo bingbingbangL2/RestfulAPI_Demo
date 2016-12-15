@@ -81,17 +81,17 @@ def updateObject(obj, update):
     return filter(lambda t: t["id"] == update['id'], getAllBooksJson())[0]
     
 if __name__ == '__main__':
-#     if os.path.exists(os.path.join(basedir, 'data.sqlite')):
-#         db.drop_all()
-#     createDB()
-#     addObjInDB(User('user1','password1'))
-#     addObjInDB(User('user2','password2'))
-#     addObjInDB(User('user3','password3'))
-#     addObjInDB(User('user4','password4'))
-#     
-#     addObjInDB(Book('Python', 20, 'Dilato'))
-#     addObjInDB(Book('JAVA', 30, 'Dilato'))
-#     addObjInDB(Book('C#', 20, 'Dilato'))
-#     print User.query.all()
-#     print Book.query.all()
+    if os.path.exists(os.path.join(basedir, 'data.sqlite')):
+        db.drop_all()
+    createDB()
+    addObjInDB(User('user1','password1'))
+    addObjInDB(User('user2','password2'))
+    addObjInDB(User('user3','password3'))
+    addObjInDB(User('user4','password4'))
+     
+    addObjInDB(Book('Python', 20, 'Dilato'))
+    addObjInDB(Book('JAVA', 30, 'Dilato'))
+    addObjInDB(Book('C#', 20, 'Dilato'))
+    print User.query.all()
+    print Book.query.all()
     getAllBooksJson()
